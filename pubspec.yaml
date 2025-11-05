@@ -1,0 +1,31 @@
+name: lamu_salary_app
+description: A Flutter app for viewing and managing salary details.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1  # ← Google Fonts 追加
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  # 画像やファイルを追加する場合はここに記述
+  # assets:
+  #   - assets/images/
+
+  # 独自フォントを追加したい場合はここに記述
+  # fonts:
+  #   - family: MyFont
+  #     fonts:
+  #       - asset: assets/fonts/MyFont-Regular.ttf
