@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:lamu_salary_app/screens/Statement_screen.dart';
+import 'package:lamu_salary_app/screens/account_screen.dart';
 import 'package:lamu_salary_app/screens/login_screen.dart';
 import 'package:lamu_salary_app/screens/changepassword_screen.dart';
 import 'package:lamu_salary_app/screens/qrscreen.dart';
@@ -10,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:lamu_salary_app/screens/account_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,20 +21,14 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0;
+  final List<Widget> _screens = [HomeScreen(), Qrscreen(), AccountScreen()];
   String currentTime = "";
-  Future<void> _logout(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('employeeCode');
-    await prefs.remove('password');
 
-    Navigator.pushReplacementNamed(context, '/login');
-  }
-
-  //時間管理================================================================-
+  @override
   void initState() {
     super.initState();
-    _updateTime(); //初期化時に時間を更新
-
+    _updateTime();
     Timer.periodic(const Duration(seconds: 1), (timer) {
       _updateTime();
     });
@@ -44,9 +40,15 @@ class _HomeScreenState extends State<HomeScreen> {
       currentTime =
           "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
     });
-    Future.delayed(const Duration(seconds: 30), _updateTime); // 30秒ごとに更新
+    Future.delayed(const Duration(seconds: 30), _updateTime);
   }
-  //===========================================================================
+
+  Future<void> _logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('employeeCode');
+    await prefs.remove('password');
+    Navigator.pushReplacementNamed(context, '/login');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,15 +63,12 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         centerTitle: true,
       ),
-
-      // --- メイン部分 ---
       body: SingleChildScrollView(
-        //スクロールが必要な時に利用
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // --- QRエリア ---
+              // QRエリア
               GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -87,25 +86,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       BoxShadow(
                         color: Colors.black12,
                         blurRadius: 8,
-                        offset: const Offset(0, 4), //影を下方向４にずらす
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
                   child: Stack(
-                    //上部childで書いた白ボックスの背景上にQRを表示させる
                     children: [
                       // 左のQRコード
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Padding(
                           padding: const EdgeInsets.only(left: 24),
-                          child: QrImageView(
-                            data: "employee_001", // ← QRデータ内容
-                            size: 100,
-                          ),
+                          child: QrImageView(data: "employee_001", size: 100),
                         ),
                       ),
-
                       // 右上の時間
                       Positioned(
                         top: 16,
@@ -119,7 +113,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
-
                       // 右下の「Tap」
                       Positioned(
                         bottom: 10,
@@ -136,10 +129,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 24),
-
-              // --- 機能ボタンエリア ---
+              // 機能ボタンエリア
               GridView.count(
                 crossAxisCount: 2,
                 shrinkWrap: true,
@@ -159,9 +150,25 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-
-      // --- 下部ナビゲーション ---
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+
+          if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const Qrscreen()),
+            );
+          } else if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AccountScreen()),
+            );
+          }
+        },
         backgroundColor: Colors.white,
         selectedItemColor: Colors.blueAccent,
         unselectedItemColor: Colors.grey,
