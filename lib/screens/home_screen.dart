@@ -1,6 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:lamu_salary_app/screens/Statement_screen.dart';
 import 'package:lamu_salary_app/screens/login_screen.dart';
+import 'package:lamu_salary_app/screens/changepassword_screen.dart';
+import 'package:lamu_salary_app/screens/qrscreen.dart';
+import 'package:lamu_salary_app/screens/shift_management.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,126 +19,196 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // ホバー状態を管理
-  final Map<String, bool> _isHovering = {
-    'statement': false,
-    'loginPassword': false,
-    'statementPassword': false,
-    'notice': false,
-    'logout': false,
-  };
+  String currentTime = "";
+  Future<void> _logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('employeeCode');
+    await prefs.remove('password');
+
+    Navigator.pushReplacementNamed(context, '/login');
+  }
+
+  //時間管理================================================================-
+  void initState() {
+    super.initState();
+    _updateTime(); //初期化時に時間を更新
+
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      _updateTime();
+    });
+  }
+
+  void _updateTime() {
+    final now = DateTime.now();
+    setState(() {
+      currentTime =
+          "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+    });
+    Future.delayed(const Duration(seconds: 30), _updateTime); // 30秒ごとに更新
+  }
+  //===========================================================================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Padding(padding: EdgeInsets.all(16)),
-          const Text(
-            '大黒天物産株式会社\n給与・賞与明細書',
-            style: TextStyle(fontSize: 20),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 40),
+      backgroundColor: const Color(0xfff2f2f2),
+      appBar: AppBar(
+        title: Text(
+          'ホーム',
+          style: GoogleFonts.notoSansJp(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+      ),
 
-          // 1行目（明細書を見る）
-          _buildHoverRow(
-            keyName: 'statement',
-            icon: Icons.description,
-            text: '明細書を見る',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const StatementScreen(),
+      // --- メイン部分 ---
+      body: SingleChildScrollView(
+        //スクロールが必要な時に利用
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // --- QRエリア ---
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const Qrscreen()),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 8,
+                        offset: const Offset(0, 4), //影を下方向４にずらす
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    //上部childで書いた白ボックスの背景上にQRを表示させる
+                    children: [
+                      // 左のQRコード
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 24),
+                          child: QrImageView(
+                            data: "employee_001", // ← QRデータ内容
+                            size: 100,
+                          ),
+                        ),
+                      ),
+
+                      // 右上の時間
+                      Positioned(
+                        top: 16,
+                        right: 20,
+                        child: Text(
+                          currentTime,
+                          style: GoogleFonts.robotoMono(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+
+                      // 右下の「Tap」
+                      Positioned(
+                        bottom: 10,
+                        right: 20,
+                        child: Text(
+                          "Tap ▶",
+                          style: GoogleFonts.notoSansJp(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              );
-            },
-          ),
-          const SizedBox(height: 30),
+              ),
 
-          // 2行目（ログインパスワードの変更）
-          _buildHoverRow(
-            keyName: 'loginPassword',
-            icon: Icons.lock_outline,
-            text: 'ログインパスワードの変更',
-            onTap: () {
-              // 遷移処理を書く
-            },
-          ),
-          const SizedBox(height: 30),
+              const SizedBox(height: 24),
 
-          // 3行目（明細書パスワードの変更）
-          _buildHoverRow(
-            keyName: 'statementPassword',
-            icon: Icons.receipt_long_outlined,
-            text: '明細書パスワードの変更',
-            onTap: () {
-              // 遷移処理を書く
-            },
+              // --- 機能ボタンエリア ---
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                children: [
+                  _buildMenuCard(Icons.email, "業務メール"),
+                  _buildMenuCard(Icons.schedule, "シフト表"),
+                  _buildMenuCard(Icons.receipt_long, "給与明細"),
+                  _buildMenuCard(Icons.history, "勤怠履歴"),
+                  _buildMenuCard(Icons.people_alt, "チーム情報"),
+                  _buildMenuCard(Icons.support_agent, "サポート"),
+                ],
+              ),
+            ],
           ),
-          const SizedBox(height: 30),
+        ),
+      ),
 
-          // 4行目（お知らせ）
-          _buildHoverRow(
-            keyName: 'notice',
-            icon: Icons.notifications_none,
-            text: 'お知らせ',
-            onTap: () {
-              // 遷移処理を書く
-            },
+      // --- 下部ナビゲーション ---
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
+        selectedItemColor: Colors.blueAccent,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Top'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.qr_code_2, size: 30),
+            label: 'QR',
           ),
-          const SizedBox(height: 30),
-
-          // 5行目（ログアウト）
-          _buildHoverRow(
-            keyName: 'logout',
-            icon: Icons.logout,
-            text: 'ログアウト',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-              );
-            },
+          BottomNavigationBarItem(
+            icon: CircleAvatar(
+              radius: 14,
+              backgroundImage: AssetImage('assets/profile.png'),
+            ),
+            label: 'アカウント',
           ),
         ],
       ),
     );
   }
 
-  Widget _buildHoverRow({
-    required String keyName,
-    required IconData icon,
-    required String text,
-    required VoidCallback onTap,
-  }) {
-    final isHovering = _isHovering[keyName] ?? false;
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovering[keyName] = true),
-      onExit: (_) => setState(() => _isHovering[keyName] = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: isHovering ? Colors.red : Colors.blue),
-            const SizedBox(width: 10),
-            Text(
-              text,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: isHovering ? Colors.red : Colors.blue,
-                decoration: TextDecoration.underline,
-              ),
+  Widget _buildMenuCard(IconData icon, String title) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.blueAccent, size: 36),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: GoogleFonts.notoSansJp(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

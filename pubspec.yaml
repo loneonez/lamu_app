@@ -10,12 +10,24 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  google_fonts: ^6.2.1  # ← Google Fonts 追加
+  google_fonts: ^6.2.1
+  firebase_core: ^4.2.1
+  firebase_auth: ^6.1.2
+  url_launcher: ^6.3.0
+  table_calendar: ^3.2.0
+  intl: ^0.20.2
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
+  cloud_firestore: ^6.1.0
+  shared_preferences: ^2.5.3
+  #カレンダー-------------------------------
+  riverpod_generator: ^2.6.5
+  build_runner: ^2.4.15
+
 
 flutter:
   uses-material-design: true

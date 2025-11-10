@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "926488724233",
+    "project_id": "paymentsystem-1f3ae",
+    "storage_bucket": "paymentsystem-1f3ae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:926488724233:android:322e9abfa1474254b289d8",
+        "android_client_info": {
+          "package_name": "com.example.lamu_salary_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOlZ64i1IdCVR6vnlQkodbFUEu5vdZFqc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
