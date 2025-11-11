@@ -28,7 +28,10 @@ class _QrscreenState extends State<Qrscreen> {
             left: 16,
             child: GestureDetector(
               onTap: () {
-                Navigator.pop(context); // 戻る処理
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                ); // 戻る処理
               },
               child: const Icon(Icons.close, size: 28),
             ),
@@ -67,25 +70,6 @@ class _QrscreenState extends State<Qrscreen> {
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.blueAccent,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Top'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code_2, size: 30),
-            label: 'QR',
-          ),
-          BottomNavigationBarItem(
-            icon: CircleAvatar(
-              radius: 14,
-              backgroundImage: AssetImage('assets/profile.png'),
-            ),
-            label: 'アカウント',
           ),
         ],
       ),

@@ -21,6 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isButtonEnabled = false;
   final String _url = 'https://www.e-dkt.co.jp/';
 
+  //TODO==============================================
   @override
   void initState() {
     super.initState();
@@ -222,6 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
+
                 TextField(
                   controller: _passwordController,
                   decoration: const InputDecoration(
@@ -231,6 +233,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     border: OutlineInputBorder(),
                   ),
                   obscureText: true,
+                  onSubmitted: (_) {
+                    if (_isButtonEnabled) {
+                      _login(); //Enterキーでログイン
+                    }
+                  },
                 ),
 
                 const SizedBox(height: 40),
@@ -255,7 +262,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: const Text('ログイン'),
                   ),
                 ),
-
                 const SizedBox(height: 20),
 
                 // 公式サイトリンク

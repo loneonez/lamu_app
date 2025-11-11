@@ -1,17 +1,16 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:lamu_salary_app/screens/Statement_screen.dart';
-import 'package:lamu_salary_app/screens/account_screen.dart';
-import 'package:lamu_salary_app/screens/login_screen.dart';
-import 'package:lamu_salary_app/screens/changepassword_screen.dart';
-import 'package:lamu_salary_app/screens/qrscreen.dart';
-import 'package:lamu_salary_app/screens/shift_management.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:intl/intl.dart';
+import 'package:lamu_salary_app/screens/homelistScreens/attendance_screen.dart';
+import 'package:lamu_salary_app/screens/qrscreen.dart';
 import 'package:lamu_salary_app/screens/account_screen.dart';
+import 'package:lamu_salary_app/screens/homelistScreens/support_screen.dart';
+import 'package:lamu_salary_app/screens/homelistScreens/team_screen.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lamu_salary_app/screens/homelistScreens/mail_screen.dart';
+import 'package:lamu_salary_app/screens/homelistScreens/shift_management.dart';
+import 'package:lamu_salary_app/screens/homelistScreens/Statement_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,26 +20,47 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
-  final List<Widget> _screens = [HomeScreen(), Qrscreen(), AccountScreen()];
-  String currentTime = "";
+  int _currentIndex = 0; //現在の画面の値
+  late List<Widget> _screens; //QR下のボタン集
+  String currentTime = ""; //現在の時間
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
+    _screens = [
+      _HomeContent(
+        onTapQr: () {
+          setState(() {
+            _currentIndex = 1;
+          });
+        },
+      ),
+      const Qrscreen(),
+      const AccountScreen(),
+    ];
+
+    //========================================================
     _updateTime();
-    Timer.periodic(const Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _updateTime();
     });
   }
 
   void _updateTime() {
+    if (!mounted) return;
     final now = DateTime.now();
     setState(() {
       currentTime =
           "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
     });
-    Future.delayed(const Duration(seconds: 30), _updateTime);
+  }
+
+  //====================================================
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> _logout(BuildContext context) async {
@@ -50,32 +70,86 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.pushReplacementNamed(context, '/login');
   }
 
+  //画面下のナビゲーションバー================================================================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xfff2f2f2),
-      appBar: AppBar(
-        title: Text(
-          'ホーム',
-          style: GoogleFonts.notoSansJp(fontWeight: FontWeight.bold),
-        ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
         backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.grey[500],
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Top'),
+          BottomNavigationBarItem(icon: Icon(Icons.qr_code_2), label: 'QR'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'アカウント'),
+        ],
       ),
+    );
+  }
+}
+
+//===================================================
+// ホーム画面の中身部分
+//===================================================
+class _HomeContent extends StatelessWidget {
+  final VoidCallback onTapQr;
+  const _HomeContent({super.key, required this.onTapQr});
+
+  // 6つのメニューをまとめて定義
+  static final List<Map<String, dynamic>> _menuItems = [
+    {'icon': Icons.email, 'title': '業務メール', 'screen': const MailScreen()},
+    {
+      'icon': Icons.schedule,
+      'title': 'シフト表',
+      'screen': const ShiftmanagementScreen(),
+    },
+    {
+      'icon': Icons.receipt_long,
+      'title': '給与明細',
+      'screen': const StatementScreen(),
+    },
+    {
+      'icon': Icons.history,
+      'title': '勤怠履歴',
+      'screen': const AttendanceScreen(),
+    },
+    {'icon': Icons.people_alt, 'title': 'チーム情報', 'screen': const TeamScreen()},
+    {
+      'icon': Icons.support_agent,
+      'title': 'サポート',
+      'screen': const SupportScreen(),
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final currentTime =
+        "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+
+    return Scaffold(
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // QRエリア
+              Padding(padding: EdgeInsets.only(top: 40)),
+              Align(
+                alignment: Alignment.topRight,
+                child: Icon(Icons.notifications, size: 28, color: Colors.black),
+              ),
+              //QR画面==========================================
+              const Padding(padding: EdgeInsets.only(top: 30)),
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Qrscreen()),
-                  );
-                },
+                onTap: onTapQr,
                 child: Container(
                   width: double.infinity,
                   height: 180,
@@ -92,7 +166,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: Stack(
                     children: [
-                      // 左のQRコード
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Padding(
@@ -100,7 +173,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: QrImageView(data: "employee_001", size: 100),
                         ),
                       ),
-                      // 右上の時間
                       Positioned(
                         top: 16,
                         right: 20,
@@ -108,12 +180,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           currentTime,
                           style: GoogleFonts.robotoMono(
                             fontSize: 20,
-                            fontWeight: FontWeight.bold,
                             color: Colors.black87,
                           ),
                         ),
                       ),
-                      // 右下の「Tap」
                       Positioned(
                         bottom: 10,
                         right: 20,
@@ -130,92 +200,66 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              // 機能ボタンエリア
+
+              // メニューカード一覧=======================================
               GridView.count(
-                crossAxisCount: 2,
+                crossAxisCount: 3,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
-                children: [
-                  _buildMenuCard(Icons.email, "業務メール"),
-                  _buildMenuCard(Icons.schedule, "シフト表"),
-                  _buildMenuCard(Icons.receipt_long, "給与明細"),
-                  _buildMenuCard(Icons.history, "勤怠履歴"),
-                  _buildMenuCard(Icons.people_alt, "チーム情報"),
-                  _buildMenuCard(Icons.support_agent, "サポート"),
-                ],
+                children: _menuItems.map((item) {
+                  return _buildMenuCard(item['icon'], item['title'], () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => item['screen']),
+                    );
+                  });
+                }).toList(),
               ),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-
-          if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const Qrscreen()),
-            );
-          } else if (index == 2) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const AccountScreen()),
-            );
-          }
-        },
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.blueAccent,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Top'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code_2, size: 30),
-            label: 'QR',
-          ),
-          BottomNavigationBarItem(
-            icon: CircleAvatar(
-              radius: 14,
-              backgroundImage: AssetImage('assets/profile.png'),
-            ),
-            label: 'アカウント',
-          ),
-        ],
-      ),
     );
   }
 
-  Widget _buildMenuCard(IconData icon, String title) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: Colors.blueAccent, size: 36),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: GoogleFonts.notoSansJp(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+  //===================================================
+  // メニューカードWidget
+  //===================================================
+  static Widget _buildMenuCard(
+    IconData icon,
+    String title,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 6,
+              offset: const Offset(0, 3),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.black, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: GoogleFonts.notoSansJp(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

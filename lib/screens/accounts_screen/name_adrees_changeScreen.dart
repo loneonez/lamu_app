@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class ForgotPasswardScreen extends StatelessWidget {
-  const ForgotPasswardScreen({super.key});
+class NameAdreesChangescreen extends StatelessWidget {
+  const NameAdreesChangescreen({super.key});
 
   @override
   Widget build(BuildContext context) {
